@@ -35,6 +35,20 @@ function App() {
     loadTickets();
   }, [loadTickets]);
 
+  const priorityLabel = (priority) => {
+    const p = priority || "P3";
+    return <span className={`badge priority-${p}`}>{p}</span>;
+  };
+
+  const urgencyLabel = (urgency) => {
+    const isUrgent = Boolean(urgency);
+    return (
+      <span className={`badge urgency-${isUrgent ? "yes" : "no"}`}>
+        {isUrgent ? "Urgent" : "Normal"}
+      </span>
+    );
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -66,8 +80,7 @@ function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>AI-Powered Support Ticket Triage (Local Heuristics)</h1>
-        <p>Submit a ticket and get category, priority, urgency, confidence, and keywords.</p>
+        <h1>AI-Powered Support Ticket Triage</h1>
       </header>
 
       <section className="panel">
@@ -77,7 +90,7 @@ function App() {
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Example: Our production checkout is down and customers can't pay. Urgent!"
+            placeholder="Example: Analyse the issue of a customer and provide a report"
             rows={6}
             minLength={10}
             required
@@ -100,15 +113,23 @@ function App() {
             </div>
             <div className="kv">
               <div className="k">Priority</div>
-              <div className="v">{result.priority}</div>
+              <div className="v">{priorityLabel(result.priority)}</div>
             </div>
             <div className="kv">
               <div className="k">Urgency</div>
-              <div className="v">{result.urgency ? "Urgent" : "Normal"}</div>
+              <div className="v">{urgencyLabel(result.urgency)}</div>
             </div>
             <div className="kv">
               <div className="k">Confidence</div>
-              <div className="v">{result.confidence}</div>
+              <div className="v confidence">
+                <span className="confidence-value">{result.confidence}</span>
+                <span className="confidence-bar">
+                  <span
+                    className="confidence-fill"
+                    style={{ width: `${Math.round(Number(result.confidence) * 100)}%` }}
+                  />
+                </span>
+              </div>
             </div>
           </div>
 
@@ -131,32 +152,34 @@ function App() {
         ) : tickets.length === 0 ? (
           <p>No tickets yet. Submit one above.</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Created</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Urgency</th>
-                <th>Confidence</th>
-                <th>Keywords</th>
-                <th>Message</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td>{new Date(ticket.created_at).toLocaleString()}</td>
-                  <td>{ticket.category}</td>
-                  <td>{ticket.priority}</td>
-                  <td>{ticket.urgency ? "Yes" : "No"}</td>
-                  <td>{ticket.confidence}</td>
-                  <td>{(ticket.keywords || []).join(", ")}</td>
-                  <td>{ticket.message}</td>
+          <div className="tableWrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Created</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Urgency</th>
+                  <th>Confidence</th>
+                  <th>Keywords</th>
+                  <th>Message</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td>{new Date(ticket.created_at).toLocaleString()}</td>
+                    <td>{ticket.category}</td>
+                    <td>{priorityLabel(ticket.priority)}</td>
+                    <td>{urgencyLabel(ticket.urgency)}</td>
+                    <td>{ticket.confidence}</td>
+                    <td>{(ticket.keywords || []).join(", ")}</td>
+                    <td>{ticket.message}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>
